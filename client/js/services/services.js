@@ -1,9 +1,24 @@
 angular.module('stackets.services', [])
   .factory('Snippets', function ($http) {
     var data;
-    var topics;
-    var tags;
     var languages;
+
+    var user = {};
+
+    var logIn = function(id) {
+      getUserData(id)
+      .then(function(response){
+        var data = response.data;
+        user.email = data.email;
+        user.name = data.name;
+        user.image = data.image;
+        user.id = id;
+      });
+    }
+
+    var getLoggedInUserData = function() {
+      return user;
+    }
 
     var addSnippet = function (snippet) {
       return $http({
@@ -36,26 +51,6 @@ angular.module('stackets.services', [])
       });
     };
 
-    var getAllTopics = function () {
-      return $http({
-        method: 'GET',
-        url: '/api/topics',
-      }).then(function (resp) {
-        topics = resp.data;
-        return topics;
-      });
-    };
-
-    var getAllTags = function () {
-      return $http({
-        method: 'GET',
-        url: '/api/tags',
-      }).then(function (resp) {
-        tags = resp.data;
-        return tags;
-      });
-    };
-
     var getAllLanguages = function () {
       return $http({
         method: 'GET',
@@ -76,15 +71,102 @@ angular.module('stackets.services', [])
       });
     };
 
+    var getSnippetsByUser = function (data) {
+      return $http({
+        method: 'GET',
+        url: '/api/getSnippetsByUser/' + data.userId
+      }).then(function (resp) {
+        data = resp.data;
+        return data;
+      });
+    };
+
+    var getFavsBySnippet = function (data) {
+      return $http({
+        method: 'GET',
+        url: '/api/getFavsBySnippet/' +  data.snippetId
+      }).then(function (response) {
+        return response;
+      });
+    };
+
+    var getFavsByUser = function (userId) {
+      return $http({
+        method: 'GET',
+        url: '/api/getFavsByUser/' +  userId
+      }).then(function (response) {
+        return response;
+      });
+    };
+
+    var isFavSnippetByUser = function (data) {
+      return $http({
+        method: 'GET',
+        url: '/api/isFavSnippetByUser/' +  data.snippetId + '/' + data.userId
+      }).then(function (response) {
+        return response;
+      });
+    };
+
+    var toggleFavorite = function (data) {
+      return $http({
+        method: 'POST',
+        url: '/api/favorite',
+        data: data
+      });
+    };
+
+    var getCategories = function() {
+      return $http({
+        method: 'GET',
+        url: '/api/categories'
+      }).then(function(response) {
+        return response.data;
+      })
+    };
+
+    var getSubcategories = function(id) {
+      return $http({
+        method: 'GET',
+        url: '/api/sub-categories/' + id
+      }).then(function(response) {
+        return response.data;
+      })
+    };
+
+    var getUserData = function (id) {
+      return $http({
+        method: 'GET',
+        url: '/api/getUserData/' + id
+      });
+    };
+
+    var authenticate = function(token) {
+      return $http({
+        method: 'POST',
+        url: '/authenticate',
+        data: {webToken: token}
+      })
+    }
+
     return {
       addSnippet: addSnippet,
       getAllSnippets: getAllSnippets,
-      getAllTopics: getAllTopics,
-      getAllTags: getAllTags,
       getAllLanguages: getAllLanguages,
       getRecentSnippets: getRecentSnippets,
       getSnippetById: getSnippetById,
       data: data,
-      topics: topics
+      toggleFavorite: toggleFavorite,
+      isFavSnippetByUser: isFavSnippetByUser,
+      getFavsBySnippet: getFavsBySnippet,
+      getCategories: getCategories,
+      getSubcategories: getSubcategories,
+      getUserData: getUserData,
+      getFavsByUser: getFavsByUser,
+      getSnippetsByUser: getSnippetsByUser,
+      logIn: logIn,
+      getLoggedInUserData: getLoggedInUserData,
+      user: user,
+      authenticate: authenticate
     };
   });

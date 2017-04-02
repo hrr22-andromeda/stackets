@@ -22,9 +22,17 @@
   "homepage": "https://github.com/hrr22-andromeda/stackets#readme",
   "dependencies": {
     "angular-ui-ace": "^0.2.3",
+    "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.17.1",
     "express": "^4.15.2",
+    "express-jwt": "^5.1.0",
+    "express-session": "^1.15.2",
     "jasmine-node": "^1.14.5",
+    "jsonwebtoken": "^7.3.0",
+    "morgan": "^1.8.1",
+    "passport": "^0.3.2",
+    "passport-facebook": "^2.1.1",
+    "passport-github2": "^0.1.10",
     "pg": "^6.1.4",
     "request": "^2.81.0",
     "sequelize": "^3.30.2"

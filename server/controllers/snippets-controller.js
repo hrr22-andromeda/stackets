@@ -1,183 +1,169 @@
 var db = require('../config/db.js');
 
-
-
 module.exports = {
   get: function(req, res) {
     db.Snippet.findAll({
       include: [
-        {model: db.Topic},
-        {model: db.Tag},
-        {model: db.Language}
+        {model: db.Language},
+        {model: db.Category},
+        {model: db.Subcategory},
+        {model: db.User}
       ]
-    })
-      .then(function(snippets) {
-        snippets = snippets.map(function(snippet) {
-          // Get ALL data regarding the snippet, including join table values and columns
-          var snipVals = snippet.dataValues;
-          // console.log(snipVals);
-
-          // Get only the tag id and name. We don't care about when the tags were created
-          var tags = snipVals.Tags.map(function(tag) {
-            return {
-              id: tag.dataValues.id,
-              tag: tag.dataValues.tag
-            };
-          });
-          // console.log(tags);
-
-          // Then we want to send back all the necessary information from the original
-          // snippet object, with the addition of the Topic name and the Tags array of objects
-          return {
-            id: snipVals.id,
-            title: snipVals.title,
-            snippet: snipVals.snippet,
-            'shortDescription': snipVals.shortDescription,
-            explanation: snipVals.explanation,
-            'createdAt': snipVals.createdAt,
-            'updatedAt': snipVals.updatedAt,
-            'TopicId': snipVals.TopicId,
-            'Topic': snipVals.Topic.dataValues.name,
-            'LanguageId': snipVals.LanguageId,
-            'Language': snipVals.Language.dataValues.displayname,
-            'Tags': tags
-          };
-        });
-
-        //console.log(snippets);
-        res.status(200).json(snippets);
+    }).then(function(snippets) {
+      snippets = snippets.map(function(snippet) {
+        // Get ALL data regarding the snippet, including join table values and columns
+        var snipVals = snippet.dataValues;
+        return {
+          id: snipVals.id,
+          title: snipVals.title,
+          snippet: snipVals.snippet,
+          'notes': snipVals.notes,
+          'createdAt': snipVals.createdAt,
+          'updatedAt': snipVals.updatedAt,
+          'LanguageId': snipVals.LanguageId,
+          'Language': snipVals.Language.dataValues.displayname,
+          'category': snipVals.Category.dataValues.name,
+          'subcategory': snipVals.Subcategory.dataValues.name,
+          'user': snipVals.User.dataValues
+        };
       });
+      res.status(200).json(snippets);
+    });
+  },
+
+  getSnippetsByUser: function(req, res) {
+    var params = {
+      userId: Number(req.params.userId)
+    };
+    db.Snippet.findAll({
+      where: {
+        'UserId': Number(req.params.userId)
+      },
+      include: [
+        {model: db.Language},
+        {model: db.Category},
+        {model: db.Subcategory}
+      ]
+    }).then(function(snippets) {
+      snippets = snippets.map(function(snippet) {
+        // Get ALL data regarding the snippet, including join table values and columns
+        var snipVals = snippet.dataValues;
+        return {
+          id: snipVals.id,
+          title: snipVals.title,
+          snippet: snipVals.snippet,
+          'notes': snipVals.notes,
+          'createdAt': snipVals.createdAt,
+          'updatedAt': snipVals.updatedAt,
+          'LanguageId': snipVals.LanguageId,
+          'Language': snipVals.Language.dataValues.displayname,
+          'category': snipVals.Category.dataValues.name,
+          'subcategory': snipVals.Subcategory.dataValues.name
+        };
+      });
+      res.status(200).json(snippets);
+    });
   },
 
   getById: function(req, res) {
-    // POSSIBILITY this might cause async issue, if CodeSample.findAll takes longer than db.Snippet.findOne
-    // Chain CodeSample.findAll with Snippet.findOne???
-
-    var samples;
-
-    db.CodeSample.findAll({ where: { "SnippetId": Number(req.params.id) } })
-      .then(function(codesamples) {
-        // Samples will be a simple array of objects, even if only one code sample
-        // This is to provide scalability for multiple code samples in one snippet in the future
-        // [ "(code sample 1)", "(code sample 2)", ... ]
-        samples = codesamples.map(function(sample) {
-          return sample.dataValues.codeSample;
-        });
-      });
-
     db.Snippet.findOne({
       include: [
-        {model: db.Topic},
-        {model: db.Tag},
-        {model: db.Language}
+        {model: db.Language},
+        {model: db.ResourceUrl},
+        {model: db.Category},
+        {model: db.Subcategory},
+        {model: db.User}
       ],
-      where: { id: Number(req.params.id)}
-    })
-      .then(function(snippet) {
+      where: {
+        id: Number(req.params.id)
+      }
+    }).then(function(snippet) {
+      if (snippet) {
         // NOTE: This is the exact same as 'get'
         // Only difference is that the 'where' options is added and returns 1 object
         // Make this more modular and DRY
         var snipVals = snippet.dataValues;
 
-        var tags = snipVals.Tags.map(function(tag) {
-          return {
-            id: tag.dataValues.id,
-            tag: tag.dataValues.tag
-          };
-        });
-
         res.status(200).json({
           id: snipVals.id,
           title: snipVals.title,
           snippet: snipVals.snippet,
-          "codeSample": samples,
-          'shortDescription': snipVals.shortDescription,
-          explanation: snipVals.explanation,
+          'notes': snipVals.notes,
           'createdAt': snipVals.createdAt,
           'updatedAt': snipVals.updatedAt,
-          'TopicId': snipVals.TopicId,
-          'Topic': snipVals.Topic.dataValues.name,
           'LanguageId': snipVals.LanguageId,
           'Language': snipVals.Language.dataValues.displayname,
-          'Tags': tags
+          'resources': snipVals.ResourceUrls,
+          'category': snipVals.Category.dataValues.name,
+          'subcategory': snipVals.Subcategory.dataValues.name,
+          'user': snipVals.User.dataValues
         });
-      });
+      }
+    });
   },
 
   getMostRecent: function(req, res) {
     db.Snippet.findAll({
       include: [
-        {model: db.Topic},
-        {model: db.Tag},
-        {model: db.Language}
+        {model: db.Language},
+        {model: db.Category},
+        {model: db.Subcategory}
       ],
       limit: 10,
       order: '"createdAt" DESC'
-    })
-      .then(function(snippets) {
-        // NOTE: This is the exact same as 'get'
-        // Only difference is that the 'limit' and 'order' options are added
-        // Make this more modular and DRY
-        snippets = snippets.map(function(snippet) {
-          var snipVals = snippet.dataValues;
+    }).then(function(snippets) {
+      // NOTE: This is the exact same as 'get'
+      // Only difference is that the 'limit' and 'order' options are added
+      // Make this more modular and DRY
+      snippets = snippets.map(function(snippet) {
+        var snipVals = snippet.dataValues;
 
-          var tags = snipVals.Tags.map(function(tag) {
-            return {
-              id: tag.dataValues.id,
-              tag: tag.dataValues.tag
-            };
-          });
-
-          return {
-            id: snipVals.id,
-            title: snipVals.title,
-            snippet: snipVals.snippet,
-            'shortDescription': snipVals.shortDescription,
-            explanation: snipVals.explanation,
-            'createdAt': snipVals.createdAt,
-            'updatedAt': snipVals.updatedAt,
-            'TopicId': snipVals.TopicId,
-            'Topic': snipVals.Topic.dataValues.name,
-            'LanguageId': snipVals.LanguageId,
-            'Language': snipVals.Language.dataValues.displayname,
-            'Tags': tags
-          };
-        });
-
-        res.status(200).json(snippets);
+        return {
+          id: snipVals.id,
+          title: snipVals.title,
+          snippet: snipVals.snippet,
+          'notes': snipVals.notes,
+          'createdAt': snipVals.createdAt,
+          'updatedAt': snipVals.updatedAt,
+          'LanguageId': snipVals.LanguageId,
+          'Language': snipVals.Language.dataValues.displayname,
+          'category': snipVals.Category.dataValues.name,
+          'subcategory': snipVals.Subcategory.dataValues.name,
+        };
       });
+      res.status(200).json(snippets);
+    });
   },
 
   post: function(req, res) {
     var params = {
       title: req.body.title,
       snippet: req.body.snippet,
-      shortDescription: req.body.shortDescription,
-      explanation: req.body.explanation,
-      TopicId: Number(req.body.TopicId),  // topicId comes as a string from front-end form
-      LanguageId: Number(req.body.LanguageId),  // languageId comes as a string from front-end form
+      notes: req.body.notes || '',
+      LanguageId: Number(req.body.LanguageId),
+      CategoryId: Number(req.body.category),
+      SubcategoryId: Number(req.body.subcategory),
+      // TODO: put me back in -> UserId: Number(req.body.userId)
+      UserId: Number(req.body.userId)
     };
 
-    // tags: { '1': true, '3': true, 9': true }
-    // We only want the keys, and in number format
-    var tags = Object.keys(req.body.tags).map(Number);
-
     db.Snippet.create(params)
-      .then(function (data) {
-        tags.forEach(function(item) {
-          db.SnippetTag.create({
-            "SnippetId": data.id,
-            "TagId": item
+      .then(function(data) {
+        if (req.body.resources) {
+          var resourceUrlData = req.body.resources.map(url => {
+            return {
+              "SnippetId": data.id,
+              "url": url
+            }
           });
-        });
 
-        // ALSO ADD CODE SAMPLE TO CodeSample table with new Snippet ID
-        db.CodeSample.create({
-          "codeSample": req.body.codeSample,
-          "SnippetId": data.id
-        });
-
-        res.status(201).json(data);
-      });
+          db.ResourceUrl.bulkCreate(resourceUrlData)
+          .then(function(resourceUrls) {
+            res.status(201).json(data);
+          })
+        } else {
+          res.status(201).json(data);
+        }
+      })
   }
 };

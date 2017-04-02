@@ -1,20 +1,19 @@
 <div class="featured-snippet" ng-controller='FeaturedSnippetController'>
   <h3>{{ featuredSnippetTitle }}</h3>
-  <h4>{{ snippet.title }}</h4>
+  <!-- <h4>{{ snippet.title }}</h4> -->
 
   <dl>
-    <dt><b>Topic: </b></dt>
-    <dd>{{ snippet.Topic }}</dd>
+    <dt><b>Title: </b></dt>
+    <dd>{{ snippet.title }}</dd>
+    <dt><b>Category: </b></dt>
+    <dd ng-show="snippet.category.length > 0">{{ snippet.category }} > {{ snippet.subcategory }}</dd>
     <br />
-    <dt><b>Description: </b></dt>
-    <dd>{{ snippet.shortDescription }}</dd>
+    <dt><b>Notes: </b></dt>
+    <dd>{{ snippet.notes }}</dd>
   </dl>
 
   <h5>Snippet</h5>
 
   <pre>{{ code }}</pre>
-
-  <h5>Explanation</h5>
-  <p>{{ snippet.explanation }}</p>
 
 </div>

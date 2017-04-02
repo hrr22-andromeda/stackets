@@ -1,0 +1,27 @@
+<div ng-controller="ProfileController" class="profile">
+  <input type="text" ng-model="search">
+  <div class="col-md-4">
+    <img src="{{image}}" alt="Profile photo">
+    <h3 class="name">{{name}}</h3>
+    <div class="email"><a href="mailto:{{email}}">{{email}}</a></div>
+  </div>
+
+  <div class="col-md-8">
+    <h1>My Favorites</h1>
+    <ul>
+      <li ng-repeat="favorite in favorites | filter:search">
+        <a href="/snippets/{{favorite.Snippet.id}}">{{favorite.title}}</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="col-md-8">
+    <h1>Added by {{firstname}}</h1>
+    <ul>
+      <li ng-repeat="snippet in snippets | filter:search">
+        <a href="/snippets/{{snippet.id}}">{{snippet.title}}</a>
+      </li>
+    </ul>
+  </div>
+
+</div>
